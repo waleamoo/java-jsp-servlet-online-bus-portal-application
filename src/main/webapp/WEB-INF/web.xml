@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://jakarta.ee/xml/ns/jakartaee" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd" id="WebApp_ID" version="5.0">
+	<display-name>online-bus-portal</display-name>
+	
+	<context-param>
+    	<param-name>WebAppName</param-name>
+    	<param-value>Online Bus Portal</param-value>
+	</context-param>
+  
+    <servlet-mapping>
+	    <servlet-name>default</servlet-name>
+	    <url-pattern>/resources/*</url-pattern>
+	</servlet-mapping>
+	
+	<!-- SMTP settings -->
+    <context-param>
+        <param-name>host</param-name>
+        <param-value>sandbox.smtp.mailtrap.io</param-value>
+    </context-param>
+ 
+    <context-param>
+        <param-name>port</param-name>
+        <param-value>587</param-value>
+    </context-param>
+ 
+    <context-param>
+        <param-name>user</param-name>
+        <param-value>e2dcd3a342893d</param-value>
+    </context-param>
+ 
+    <context-param>
+        <param-name>pass</param-name>
+        <param-value>dc98fe31999dfd</param-value>
+    </context-param>
+  
+  	<welcome-file-list>
+    	<welcome-file>index.jsp</welcome-file>
+  	</welcome-file-list>
+</web-app>

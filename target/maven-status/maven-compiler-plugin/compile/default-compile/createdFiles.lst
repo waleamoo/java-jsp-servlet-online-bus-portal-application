@@ -9,6 +9,7 @@ com\techqwerty\model\Student.class
 com\techqwerty\model\Parent.class
 com\techqwerty\model\Route.class
 com\techqwerty\model\WaitingList.class
+com\techqwerty\dto\StudentBusRequestDto.class
 com\techqwerty\dto\ParentStudentInsertDto.class
 com\techqwerty\dto\WaitingListRequestDto.class
 com\techqwerty\model\StudentBus.class

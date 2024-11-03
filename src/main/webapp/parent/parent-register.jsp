@@ -12,7 +12,9 @@
                       Fill in all the fields to register yourself and your child. Add more children to registration when you 
                       login to your portal 
                     </p>
+                    
                     <%@ include file="/static/errors.jsp" %>
+                    
                     <form method="post">
 						<input type="hidden" name="action" value="parent-register" />
                         <div class="form-group">

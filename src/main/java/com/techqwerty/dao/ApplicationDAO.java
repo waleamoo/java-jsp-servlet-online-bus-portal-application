@@ -10,9 +10,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
+import com.techqwerty.dto.StudentBusRequestDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
@@ -27,7 +27,12 @@ public class ApplicationDAO {
 
     private static final String LOGIN_PARENT_BY_EMAIL = "SELECT * FROM parents WHERE parent_email = ? AND parent_password = ?";
     private static final String LOGIN_STAFF_BY_EMAIL = "SELECT * FROM admins WHERE admin_email = ? AND admin_password = ?";
-    private static final String GET_STUDENTS_BY_PARENT_ID = "SELECT * FROM `students` WHERE `parent_id` = ?;";
+    private static final String GET_STUDENTS_BY_PARENT_ID = """ 
+    		SELECT students.*, student_buses.bus_id, student_buses.payment_date, student_buses.payment_expiry_date
+			FROM `students` 
+			INNER JOIN student_buses ON students.student_id = student_buses.student_id
+			WHERE students.parent_id = ?;
+    		""";
     private static final String GET_BUS_ROUTES = "SELECT buses.bus_id, buses.bus_label, buses.bus_capacity, buses.route_id, routes.route_pickup_number, routes.route_name, routes.pickup_name, routes.dropoff_name, routes.pickup_time, routes.dropoff_time FROM buses INNER JOIN routes ON buses.route_id = routes.route_id;";
     private static final String REGISTER_PARENT = "INSERT INTO `parents`(`parent_name`, `parent_initials`, `parent_contact_number`, `parent_email`, `parent_password`) VALUES (?, ?, ?, ?, ?);";
     private static final String REGISTER_STUDENT = "INSERT INTO `students`(`student_name`, `student_contact_number`, `student_address`, `student_grade`, `parent_id`) VALUES (?, ?, ?, ?, ?);";
@@ -202,22 +207,24 @@ public class ApplicationDAO {
         return waitingList; 
     }
     
-    public List<Student> getAllStudents(int parentId){
-        List<Student> students = new ArrayList<>();
+    public List<StudentBusRequestDto> getAllStudents(int parentId){
+        List<StudentBusRequestDto> students = new ArrayList<StudentBusRequestDto>();
         try (Connection connection = getConnection(); 
             PreparedStatement preparedStatement = connection.prepareStatement(GET_STUDENTS_BY_PARENT_ID);){
             preparedStatement.setInt(1, parentId);
-            //System.out.println(preparedStatement);
             ResultSet rs =  preparedStatement.executeQuery();
             while(rs.next()){
                 students.add(
-                    new Student(
+                    new StudentBusRequestDto(
                         rs.getInt("student_id"), 
                         rs.getString("student_name"), 
                         rs.getString("student_contact_number"), 
                         rs.getString("student_address"), 
                         rs.getString("student_grade"), 
-                        rs.getInt("parent_id")
+                        rs.getInt("parent_id"),
+                        rs.getInt("bus_id"),
+                        rs.getString("payment_date"),
+                        rs.getString("payment_expiry_date")
                     )
                 );
             }

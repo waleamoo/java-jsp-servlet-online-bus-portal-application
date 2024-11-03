@@ -6,6 +6,7 @@ import java.util.List;
 import com.techqwerty.dao.ApplicationDAO;
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
+import com.techqwerty.dto.StudentBusRequestDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
@@ -87,6 +88,24 @@ public class ApplicationServlet extends HttpServlet {
 	        case "/parent":
 	        	request.getRequestDispatcher("index.jsp").forward(request, response);
 	            break;
+	        case "/parent-dashboard":
+	        	// get the login user's students 
+	            List<StudentBusRequestDto> students = applicationDAO.getAllStudents((int) session.getAttribute("parent_id"));
+	            request.setAttribute("listStudent", students);
+	            request.getRequestDispatcher("parent/parent-profile.jsp");
+	        	break;
+	        case "/parent-add-child":
+	        	request.getRequestDispatcher("parent/parent-add-child.jsp");
+	        	break;
+	        case "/parent-payment":
+	        	// get the parameter 
+	        	int studentId = Integer.parseInt(request.getParameter("studentId"));
+	        	int busId = Integer.parseInt(request.getParameter("busId"));
+	        	request.setAttribute("studentId", studentId);
+	        	request.setAttribute("busId", busId);
+	        	request.getRequestDispatcher("parent/parent-payment.jsp");
+	        	break;
+	            
 	        case "/home":
 	        	request.getRequestDispatcher("index.jsp").forward(request, response);
 	        	break;
@@ -193,9 +212,9 @@ public class ApplicationServlet extends HttpServlet {
             session.setAttribute("parent_name", parent.getParentInitials() + " " + parent.getParentSurname());
             session.setAttribute("parent_id", parent.getParentId());
             // get the login user's students 
-            List<Student> students = applicationDAO.getAllStudents((int) session.getAttribute("parent_id"));
+            List<StudentBusRequestDto> students = applicationDAO.getAllStudents((int) session.getAttribute("parent_id"));
             request.setAttribute("listStudent", students);
-            dispatcher = request.getRequestDispatcher("/parent/parent-profile.jsp");
+            dispatcher = request.getRequestDispatcher("parent/parent-profile.jsp");
         }else{
             request.setAttribute("status", "failed");
             dispatcher = request.getRequestDispatcher("index.jsp");

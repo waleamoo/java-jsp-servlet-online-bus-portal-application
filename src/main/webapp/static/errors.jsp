@@ -109,4 +109,9 @@
         <strong>Error!</strong> Registration successful.
         <button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
     </div>
+<% } else if(request.getAttribute("status") == "waitingListEmailSent") { %>
+    <div class='alert alert-success border-1 border-dark alert-dismissible fade show' role='alert'>
+        <strong>Error!</strong> Email is sent successfully.
+        <button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+    </div>
 <% } %>

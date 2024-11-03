@@ -16,6 +16,8 @@
                     
                     <% var waitingList = (List<WaitingListRequestDto>) request.getAttribute("waitingList"); %>
                     
+                    <%@ include file="/static/errors.jsp" %>
+                    
                     <table class="table">
                         <thead>
                             <tr>
@@ -37,7 +39,7 @@
 	                            		<td><%= wait.parentContactNumber %></td>
 	                            		<td><%= wait.parentEmail %></td>
 	                            		<td><a href="staff-email?parentName=<%= wait.parentName %>&studentName=<%= wait.studentName %>&parentEmail=<%= wait.parentEmail %>"><button>Email Parent</button></a> 
-	                            		| <a href=""><button>Call Parent</button></a> | <a href=""><button>Call Student</button></a></td>
+	                            		| <a href="tel:<%= wait.parentContactNumber %>"><button>Call Parent</button></a> | <a href="tel:<%= wait.studentContactNumber %>"><button>Call Student</button></a></td>
 	                            	</tr>	
 							    <% } %>
 						    <% }else{ %>

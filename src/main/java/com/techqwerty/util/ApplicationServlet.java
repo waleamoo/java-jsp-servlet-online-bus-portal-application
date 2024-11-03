@@ -130,22 +130,19 @@ public class ApplicationServlet extends HttpServlet {
             			String parent = request.getParameter("parentName");
             			
             			try {
-							EmailUtility.sendEmail(host, port, user, pass, email, "Bus Registration Expired", "Hi " + parent + "\nWe trust this finds you well. This a reminder to tell you that our child " + student + "'s transport subscription has expired.");
+							EmailUtility.sendEmail(host, port, user, pass, email, "Bus Registration Expired", "Hi " + parent + ",\nWe trust this finds you well. This a reminder to tell you that our child " + student + "'s transport subscription has expired. Please login to the bus system to make a payment.");
 						} catch (AddressException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (MessagingException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
             			
-            			//request.setAttribute("waitingList", waitingList);
-            			request.getRequestDispatcher("admin/staff-profile.jsp").forward(request, response);
+            			request.setAttribute("waitingListEmailSent", "Email sent successfully.");
+            			response.sendRedirect(getServletConfig() + "/staff-dashboard");
             		}
             	}else {
             		request.getRequestDispatcher("index.jsp").forward(request, response); 
             	}
-            	
             	break;
             default: 
             	// checks if the user is logged in
@@ -160,7 +157,6 @@ public class ApplicationServlet extends HttpServlet {
             	}else{
             		request.getRequestDispatcher("index.jsp").forward(request, response); 
             	}
-            	
                 break;
         }
     }

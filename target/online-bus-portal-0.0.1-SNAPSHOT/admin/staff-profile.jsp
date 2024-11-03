@@ -16,6 +16,8 @@
                     
                     <% var waitingList = (List<WaitingListRequestDto>) request.getAttribute("waitingList"); %>
                     
+                    <%@ include file="/static/errors.jsp" %>
+                    
                     <table class="table">
                         <thead>
                             <tr>

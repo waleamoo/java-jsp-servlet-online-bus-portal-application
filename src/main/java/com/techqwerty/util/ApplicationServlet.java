@@ -1,15 +1,18 @@
 package com.techqwerty.util;
 
-import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import com.techqwerty.dao.ApplicationDAO;
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
+import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
 import com.techqwerty.model.Student;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
 import jakarta.servlet.GenericServlet;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -21,6 +24,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 /*
  * Servlet implementation class ApplicationServlet
+ * Admin password: test
+ * Parent password: test or 1234567
  */
 @WebServlet("/")
 public class ApplicationServlet extends HttpServlet {
@@ -65,7 +70,7 @@ public class ApplicationServlet extends HttpServlet {
                 break;
             
             default:
-                resp.sendRedirect(req.getServletPath());
+            	req.getRequestDispatcher("index.jsp").forward(req, resp); 
                 break;
         }
     };
@@ -73,33 +78,89 @@ public class ApplicationServlet extends HttpServlet {
 	@Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     	HttpSession session = request.getSession();
-    	GenericServlet application = null;
         String action = request.getServletPath();
         
         switch (action) {
 	        case "/parent":
 	        	request.getRequestDispatcher("index.jsp").forward(request, response);
 	            break;
+	        case "/home":
+	        	request.getRequestDispatcher("index.jsp").forward(request, response);
+	        	break;
+	        case "/register-parent":
+	        	// get the bus routes 
+	        	List<BusRouteDto> busRouteDtos = applicationDAO.getBusRoute();
+	        	request.setAttribute("busRouteDtos", busRouteDtos);
+	        	request.getRequestDispatcher("parent/parent-register.jsp").forward(request, response); 
+	        	break;
             case "/staff":
             	request.getRequestDispatcher("staff-login.jsp").forward(request, response);
-                break;
-            case "/register-parent":
-            	// get the bus routes 
-            	List<BusRouteDto> busRouteDtos = applicationDAO.getBusRoute();
-            	request.setAttribute("busRouteDtos", busRouteDtos);
-            	request.getRequestDispatcher("parent/parent-register.jsp").forward(request, response); 
-                break;
+            	break;
+                
             case "/logout":
             	session = request.getSession();
                 session.invalidate();
                 request.getRequestDispatcher("index.jsp").forward(request, response);
                 break;
+            case "/staff-dashboard":
+            	// check if the user is logged in as a staff
+            	if(session != null) {
+            		if(session.getAttribute("admin_name") == null){ 
+            			request.getRequestDispatcher("index.jsp").forward(request, response); 
+            		}else {
+            			// show the staff dashboard
+            			List<WaitingListRequestDto> waitingList = applicationDAO.getWatingList();
+            			request.setAttribute("waitingList", waitingList);
+            			request.getRequestDispatcher("admin/staff-profile.jsp").forward(request, response);
+            		}
+            	}else {
+            		request.getRequestDispatcher("index.jsp").forward(request, response); 
+            	}
+            	
+            	break;
+            case "/staff-email":
+            	// check if the user is logged in as a staff
+            	if(session != null) {
+            		if(session.getAttribute("admin_name") == null){ 
+            			request.getRequestDispatcher("index.jsp").forward(request, response); 
+            		}else {
+            			// show the staff dashboard
+            			String email = request.getParameter("parentEmail");
+            			String student = request.getParameter("studentName");
+            			String parent = request.getParameter("parentName");
+            			
+            			try {
+							EmailUtility.sendEmail(host, port, user, pass, email, "Bus Registration Expired", "Hi " + parent + "\nWe trust this finds you well. This a reminder to tell you that our child " + student + "'s transport subscription has expired.");
+						} catch (AddressException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (MessagingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+            			
+            			//request.setAttribute("waitingList", waitingList);
+            			request.getRequestDispatcher("admin/staff-profile.jsp").forward(request, response);
+            		}
+            	}else {
+            		request.getRequestDispatcher("index.jsp").forward(request, response); 
+            	}
+            	
+            	break;
             default: 
             	// checks if the user is logged in
-            	if(session.getAttribute("user_name") != null){ 
-            		response.sendRedirect(application.getInitParameter("WebAppContextPath")+ "/list" ); 
-        		}
-            	request.getRequestDispatcher("index.jsp").forward(request, response);
+            	if(session != null) {
+            		if(session.getAttribute("user_name") != null){ 
+                		response.sendRedirect(getServletContext() + "/list"); 
+            		}else if(session.getAttribute("admin_name") != null) {
+            			response.sendRedirect(getServletContext() + "/staff-dashboard"); 
+            		}else {
+            			request.getRequestDispatcher("index.jsp").forward(request, response); 
+            		}
+            	}else{
+            		request.getRequestDispatcher("index.jsp").forward(request, response); 
+            	}
+            	
                 break;
         }
     }
@@ -151,30 +212,26 @@ public class ApplicationServlet extends HttpServlet {
         String password = request.getParameter("password");
         HttpSession session = request.getSession();
         RequestDispatcher dispatcher = null;
-
         // validate the user entries 
         if(email == null || email.equals("")){
             request.setAttribute("status", "invalidEmail");
             dispatcher = request.getRequestDispatcher("staff-login.jsp");
             dispatcher.forward(request, response);
-        }
-
-        if(password == null || password.equals("")){
+        }else if(password == null || password.equals("")){
             request.setAttribute("status", "invalidPassword");
             dispatcher = request.getRequestDispatcher("staff-login.jsp");
             dispatcher.forward(request, response);
         }
-
         // pass the password as encrypted password
         String encryptedPassword = MyEncryptor.getMd5Hash(password);
-
         // attempt login 
         Admin admin = applicationDAO.loginStaff(email, encryptedPassword);
-
         if (admin != null) {
             session.setAttribute("admin_name", admin.getAdminInitials() + " " + admin.getAdminSurname());
             session.setAttribute("admin_id", admin.getAdminId());
-            
+            // get the students in the waiting list
+            List<WaitingListRequestDto> waitingList = applicationDAO.getWatingList();
+            request.setAttribute("waitingList", waitingList);
             dispatcher = request.getRequestDispatcher("admin/staff-profile.jsp");
         }else{
             request.setAttribute("status", "failed");

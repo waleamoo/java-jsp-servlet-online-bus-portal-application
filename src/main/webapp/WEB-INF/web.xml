@@ -3,6 +3,11 @@
 	<display-name>online-bus-portal</display-name>
 	
 	<context-param>
+	    <param-name>WebAppContextPath</param-name>
+	    <param-value>http://localhost:8081/online-bus-portal/</param-value>
+	  </context-param>
+	
+	<context-param>
     	<param-name>WebAppName</param-name>
     	<param-value>Online Bus Portal</param-value>
 	</context-param>

@@ -1,43 +1,53 @@
 <%@ include file="/static/header.jsp" %>
+<%@ page import="java.util.*, com.techqwerty.dto.*" %>
 <div class="container my-4">
     <div class="row">
-        <div class="col-lg-3">
 
-            <h1 class="my-4">What's up? Hello?</h1>
-            <div class="list-group">
-                <a href="#" class="list-group-item">Category 1</a>
-                <a href="#" class="list-group-item">Category 2</a>
-                <a href="#" class="list-group-item">Category 3</a>
-            </div>
-
-        </div>
-        <!-- /.col-lg-3 -->
-
-        <div class="col-lg-9">
+        <div class="col-lg-12">
             <div class="row">
 
                 <div class="col-12">
                     <ul class="navbar-nav">
                         <li>
-                            <a href="<%= request.getContextPath() %>/list" class="nav-list">Students List</a>
+                            <a href="<%= request.getContextPath() %>/staff-dashboard" class="nav-list">Staff Dashboard</a>
                         </li>
                     </ul>
-                    <h2>Welcome to your profile area <%= session.getAttribute("user_name") %> </h2>
+                    <h2>Welcome to your profile area <%= session.getAttribute("admin_name") %> </h2>
+                    
+                    <% var waitingList = (List<WaitingListRequestDto>) request.getAttribute("waitingList"); %>
                     
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Country</th>
+                                <th>Student Name</th>
+                                <th>Student Contact Number</th>
+                                <th>Parent Name</th>
+                                <th>Parent Contact Number</th>
+                                <th>Parent Email</th>
                                 <th>&nbsp;</th>
                             </tr>
                         </thead>
                         <tbody>
-                                                        
+                        	<% if(waitingList.size() > 0){ %>
+	                        	<% for(WaitingListRequestDto wait : waitingList){ %>
+	                            	<tr>
+	                            		<td><%= wait.studentName %></td>
+	                            		<td><%= wait.studentContactNumber %></td>
+	                            		<td><%= wait.parentName %></td>
+	                            		<td><%= wait.parentContactNumber %></td>
+	                            		<td><%= wait.parentEmail %></td>
+	                            		<td><a href="staff-email?parentName=<%= wait.parentName %>&studentName=<%= wait.studentName %>&parentEmail=<%= wait.parentEmail %>"><button>Email Parent</button></a> 
+	                            		| <a href=""><button>Call Parent</button></a> | <a href=""><button>Call Student</button></a></td>
+	                            	</tr>	
+							    <% } %>
+						    <% }else{ %>
+						    	<tr>
+							    	<td colspan="6">No student in waiting list</td>
+							    </tr>
+						    <% } %>
                         </tbody>
                     </table>
+                    
                 </div>
 
             </div>

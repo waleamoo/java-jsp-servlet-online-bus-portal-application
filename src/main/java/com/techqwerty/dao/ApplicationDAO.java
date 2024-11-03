@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
+import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
 import com.techqwerty.model.Student;
@@ -32,6 +33,13 @@ public class ApplicationDAO {
     private static final String REGISTER_STUDENT = "INSERT INTO `students`(`student_name`, `student_contact_number`, `student_address`, `student_grade`, `parent_id`) VALUES (?, ?, ?, ?, ?);";
     private static final String REGISTER_STUDENT_IN_WAITING_LIST = "INSERT INTO `waiting_list`(`student_id`, `bus_id`, `joined_date`) VALUES (?, ?, ?);";
     private static final String REGISTER_STUDENT_IN_BUS = "INSERT INTO `student_buses`(`student_id`, `parent_id`, `bus_id`, `payment_date`, `payment_expiry_date`, `is_active`) VALUES (?, ?, ?, ?, ?, ?);";
+    private static final String GET_WAITING_LIST = """ 
+    		SELECT waiting_list.*, student_buses.payment_date, student_buses.payment_expiry_date, students.student_name, students.student_contact_number, 
+    			parents.parent_name, parents.parent_contact_number, parents.parent_email 
+    		FROM waiting_list INNER JOIN student_buses ON waiting_list.student_id = student_buses.student_id 
+    		INNER JOIN students ON waiting_list.student_id = students.student_id 
+    		INNER JOIN parents ON students.parent_id = parents.parent_id;
+    		""";
 
     public ApplicationDAO(){
     	
@@ -166,6 +174,34 @@ public class ApplicationDAO {
         return null;
     }
 
+    public List<WaitingListRequestDto> getWatingList(){
+        List<WaitingListRequestDto> waitingList = new ArrayList<WaitingListRequestDto>();
+        try (Connection connection = getConnection(); 
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_WAITING_LIST);){
+            ResultSet rs =  preparedStatement.executeQuery();
+            while(rs.next()){
+            	waitingList.add(
+                    new WaitingListRequestDto(
+                        rs.getInt("id"), 
+                        rs.getInt("student_id"), 
+                        rs.getInt("bus_id"), 
+                        rs.getString("joined_date"), 
+                        rs.getString("payment_date"), 
+                        rs.getString("payment_expiry_date"),
+                        rs.getString("student_name"),
+                        rs.getString("student_contact_number"),
+                        rs.getString("parent_name"),
+                        rs.getString("parent_contact_number"),
+                        rs.getString("parent_email")
+                    )
+                );
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return waitingList; 
+    }
+    
     public List<Student> getAllStudents(int parentId){
         List<Student> students = new ArrayList<>();
         try (Connection connection = getConnection(); 

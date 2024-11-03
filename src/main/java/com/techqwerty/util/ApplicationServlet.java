@@ -15,6 +15,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 import jakarta.servlet.GenericServlet;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -38,6 +39,7 @@ public class ApplicationServlet extends HttpServlet {
     private String pass;
     // inject the DAO
 	private ApplicationDAO applicationDAO;
+	
 
     @Override
     public void init() throws ServletException {
@@ -79,6 +81,7 @@ public class ApplicationServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     	HttpSession session = request.getSession();
         String action = request.getServletPath();
+        ServletContext context = getServletContext();
         
         switch (action) {
 	        case "/parent":
@@ -106,7 +109,7 @@ public class ApplicationServlet extends HttpServlet {
             	// check if the user is logged in as a staff
             	if(session != null) {
             		if(session.getAttribute("admin_name") == null){ 
-            			request.getRequestDispatcher("index.jsp").forward(request, response); 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath")); 
             		}else {
             			// show the staff dashboard
             			List<WaitingListRequestDto> waitingList = applicationDAO.getWatingList();
@@ -114,15 +117,14 @@ public class ApplicationServlet extends HttpServlet {
             			request.getRequestDispatcher("admin/staff-profile.jsp").forward(request, response);
             		}
             	}else {
-            		request.getRequestDispatcher("index.jsp").forward(request, response); 
+            		response.sendRedirect(context.getInitParameter("WebAppContextPath"));
             	}
-            	
             	break;
             case "/staff-email":
             	// check if the user is logged in as a staff
             	if(session != null) {
             		if(session.getAttribute("admin_name") == null){ 
-            			request.getRequestDispatcher("index.jsp").forward(request, response); 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath"));
             		}else {
             			// show the staff dashboard
             			String email = request.getParameter("parentEmail");
@@ -137,25 +139,25 @@ public class ApplicationServlet extends HttpServlet {
 							e.printStackTrace();
 						}
             			
-            			request.setAttribute("waitingListEmailSent", "Email sent successfully.");
-            			response.sendRedirect(getServletConfig() + "/staff-dashboard");
+            			session.setAttribute("status", "waitingListEmailSent");
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "staff-dashboard");
             		}
-            	}else {
-            		request.getRequestDispatcher("index.jsp").forward(request, response); 
+            	}else { 
+            		response.sendRedirect(context.getInitParameter("WebAppContextPath"));
             	}
             	break;
             default: 
             	// checks if the user is logged in
             	if(session != null) {
             		if(session.getAttribute("user_name") != null){ 
-                		response.sendRedirect(getServletContext() + "/list"); 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "list");
             		}else if(session.getAttribute("admin_name") != null) {
-            			response.sendRedirect(getServletContext() + "/staff-dashboard"); 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "staff-dashboard");
             		}else {
-            			request.getRequestDispatcher("index.jsp").forward(request, response); 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath"));
             		}
             	}else{
-            		request.getRequestDispatcher("index.jsp").forward(request, response); 
+            		response.sendRedirect(context.getInitParameter("WebAppContextPath"));
             	}
                 break;
         }

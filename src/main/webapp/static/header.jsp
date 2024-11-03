@@ -30,9 +30,9 @@
 
       <div class="collapse navbar-collapse" id="navbarResponsive">
         <ul class="navbar-nav ml-auto">
-          <% if(session.getAttribute("user_name") != null){ %>
+          <% if(session.getAttribute("parent_name") != null){ %>
             <li class="nav-item active">
-              <a class="nav-link" href="#">Hello <%= session.getAttribute("name") %></a>
+              <a class="nav-link" href="#">Hello <%= session.getAttribute("parent_name") %></a>
             </li>
             <li class="nav-item active">
               <a class="nav-link" href="logout">Logout</a>

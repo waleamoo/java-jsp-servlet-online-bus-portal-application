@@ -10,13 +10,9 @@ import com.techqwerty.dto.StudentBusRequestDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
-import com.techqwerty.model.Student;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
-import jakarta.servlet.GenericServlet;
 import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,7 +23,7 @@ import jakarta.servlet.http.HttpSession;
 /*
  * Servlet implementation class ApplicationServlet
  * Admin password: test
- * Parent password: test or 1234567
+ * Parent password: test
  */
 @WebServlet("/")
 public class ApplicationServlet extends HttpServlet {
@@ -92,10 +88,10 @@ public class ApplicationServlet extends HttpServlet {
 	        	// get the login user's students 
 	            List<StudentBusRequestDto> students = applicationDAO.getAllStudents((int) session.getAttribute("parent_id"));
 	            request.setAttribute("listStudent", students);
-	            request.getRequestDispatcher("parent/parent-profile.jsp");
+	            request.getRequestDispatcher("parent/parent-profile.jsp").forward(request, response);
 	        	break;
 	        case "/parent-add-child":
-	        	request.getRequestDispatcher("parent/parent-add-child.jsp");
+	        	request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
 	        	break;
 	        case "/parent-payment":
 	        	// get the parameter 
@@ -103,7 +99,7 @@ public class ApplicationServlet extends HttpServlet {
 	        	int busId = Integer.parseInt(request.getParameter("busId"));
 	        	request.setAttribute("studentId", studentId);
 	        	request.setAttribute("busId", busId);
-	        	request.getRequestDispatcher("parent/parent-payment.jsp");
+	        	request.getRequestDispatcher("parent/parent-payment.jsp").forward(request, response);
 	        	break;
 	            
 	        case "/home":
@@ -168,8 +164,8 @@ public class ApplicationServlet extends HttpServlet {
             default: 
             	// checks if the user is logged in
             	if(session != null) {
-            		if(session.getAttribute("user_name") != null){ 
-            			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "list");
+            		if(session.getAttribute("parent_name") != null){ 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "parent-dashboard");
             		}else if(session.getAttribute("admin_name") != null) {
             			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "staff-dashboard");
             		}else {

@@ -14,9 +14,8 @@
                         Fill all fields to add a new child to your children list for bus transport 
                       </p>
   
-  						<jsp:include page="/static/errors.jsp" />
-  
-  
+  					<jsp:include page="/static/errors.jsp" />
+ 
                       <form action="parent-add-child" method="post">
   
                           <div class="form-group">
@@ -39,8 +38,8 @@
   
                           <div class="form-group">
                             <label for="student_grd">Student Grade</label>
-                            <select name="student_grd" id="student_grd">
-                                <option value=""></option>
+                            <select class="form-control" name="student_grd" id="student_grd">
+                                <option value="">Select a grade</option>
                                 <option value="10">10</option>
                                 <option value="11">11</option>
                                 <option value="12">12</option>

@@ -16,7 +16,8 @@ import com.techqwerty.dto.StudentBusRequestDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
-import com.techqwerty.model.Student;
+
+import jakarta.el.StaticFieldELResolver;
 
 public class ApplicationDAO {
 
@@ -45,6 +46,17 @@ public class ApplicationDAO {
     		INNER JOIN students ON waiting_list.student_id = students.student_id 
     		INNER JOIN parents ON students.parent_id = parents.parent_id;
     		""";
+    private static final String GET_BUS_AVAILABILITY = """ 
+    		SET @curentCapacity = (SELECT COUNT(*) AS 'count' FROM student_buses 
+			    INNER JOIN buses ON student_buses.bus_id = buses.bus_id
+			    WHERE is_active = 1 AND buses.bus_id = ?
+			    GROUP BY student_buses.bus_id);
+			SET @fullCapacity = (SELECT bus_capacity FROM buses WHERE bus_id = ?);
+			SELECT IF(@currentCapacity < @fullCapacity, "TRUE", "FALSE") AS if_return_value; 
+    		""";
+    private static final String UPDATE_STUDENT_PAYMENT = "UPDATE `student_buses` SET `is_active` = ?, `payment_date` = ?, `payment_expiry_date` = ? WHERE `student_id` = ?;";
+    private static final String DELETE_STUDENT_IN_WAITING_LIST = "DELETE FROM waiting_list WHERE student_id = ?;";
+    
 
     public ApplicationDAO(){
     	
@@ -84,7 +96,7 @@ public class ApplicationDAO {
      */
     
     public int registerParent(ParentStudentInsertDto dto) throws SQLException{
-    	int int_inserted_parent_id = 0, int_inserted_student_id = 0, int_inserted_payment_id = 0;
+    	int int_inserted_parent_id = 0, int_inserted_student_id = 0;
         try(Connection connection = getConnection(); PreparedStatement pst = connection.prepareStatement(REGISTER_PARENT, Statement.RETURN_GENERATED_KEYS);) {
 	            pst.setString(1, dto.parentSurname);
 	            pst.setString(2, dto.parentInitials);
@@ -232,6 +244,50 @@ public class ApplicationDAO {
             System.out.println(e.getMessage());
         }
         return students; 
+    }
+    
+    public boolean checkBusAvailability(int busId) {
+    	boolean isAvailable = false;
+    	try (Connection connection = getConnection(); 
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_BUS_AVAILABILITY);){
+            preparedStatement.setInt(1, busId);
+            ResultSet rs =  preparedStatement.executeQuery();
+            while(rs.next()){
+            	if(rs.getString("if_return_value") == "TRUE")
+            		isAvailable = true;
+            	else 
+            		isAvailable = false;
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    	return isAvailable;
+    }
+    
+    public void updateStudentPaymentRegistration(int studentId, int busId, String payment_expiry_date) {
+    	var df = new SimpleDateFormat("yyyy-MM-dd");
+    	
+    	try (Connection connection = getConnection(); 
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STUDENT_PAYMENT);){
+    		
+            preparedStatement.setInt(1, 1);
+            preparedStatement.setString(2, df.format(new Date()).toString());
+            preparedStatement.setString(3, payment_expiry_date); // TODO: payment expiry date fix 
+            preparedStatement.setInt(4, studentId);
+            int rowCount =  preparedStatement.executeUpdate();
+            if(rowCount > 0) {
+            	// delete the student from the waiting list 
+            	try (PreparedStatement pstStudent = connection.prepareStatement(DELETE_STUDENT_IN_WAITING_LIST);){
+					pstStudent.setInt(1, studentId);
+					pstStudent.executeUpdate();
+				} catch (Exception e) {
+					System.out.println("Student cannot removed from waiting list: " + e.getMessage());
+				}
+            }
+            	
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
     
     public List<BusRouteDto> getBusRoute(){

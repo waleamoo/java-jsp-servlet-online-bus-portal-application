@@ -8,7 +8,8 @@
   <script type="text/javascript" src="resources/js/jquery.min.js"></script>
   <script type="text/javascript" src="resources/js/bootstrap.bundle.min.js"></script>
   <script type="text/javascript" src="resources/js/chart.min.js"></script>
-
+  <!-- PayStack Payment JS -->
+  <script src="https://js.paystack.co/v2/inline.js">
 </body>
 
 </html>

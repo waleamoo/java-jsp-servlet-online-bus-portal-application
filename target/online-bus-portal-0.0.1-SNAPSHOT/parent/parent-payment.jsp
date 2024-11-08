@@ -14,7 +14,7 @@
 					<h2>Make a payment</h2>
 					<p>Select a transporting plan.</p>
 
-					<form action="/parent/post-make-payment" method="POST">
+					<form action="/save-order-and-pay" method="POST">
 
 						<h2>Choose Bus Transportation Plan</h2>
 
@@ -38,7 +38,7 @@
 
 						<br>
 
-						<h2>Payment</h2>
+						<!-- <h2>Payment</h2>
 						<hr>
 
 						<div class="form-group">
@@ -63,9 +63,14 @@
 							<label for="card_pin">PIN</label> <input type="password"
 								class="form-control" name="card_pin" id="card_pin" maxlength="4"
 								required>
-						</div>
+						</div> -->
+						
+						<input type="hidden" name="user_email" value="<%= session.getAttribute("parent_email") %>"> 
+						  <input type="hidden" name="amount" value=""> 
+						  <input type="hidden" name="cartid" value="<%= request.getAttribute("studentId") %>"> 
+						  <input type="hidden" name="callback_url" value="<% out.print(application.getInitParameter("WebAppContextPath") + "thank-you?studentId=" + request.getAttribute("studentId") + "&busId=" + request.getAttribute("busId")); %>">
 
-						<button type="submit" class="btn btn-secondary btn-lg mb-4">Make
+						<button type="submit" name="pay_now" id="pay-now" title="Pay now" class="btn btn-secondary btn-lg mb-4">Make
 							Payment</button>
 
 					</form>

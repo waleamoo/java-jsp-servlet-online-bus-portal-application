@@ -104,6 +104,11 @@
         <strong>Error!</strong> Password is invalid.
         <button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
     </div>
+<% } else if(request.getAttribute("status") == "invalidBusRegistration") { %>
+    <div class='alert alert-danger border-1 border-dark alert-dismissible fade show' role='alert'>
+        <strong>Error!</strong> Bus is unavailable. Current capacity is full.
+        <button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+    </div>
 <% } else if(request.getAttribute("status") == "registerMessage") { %>
     <div class='alert alert-success border-1 border-dark alert-dismissible fade show' role='alert'>
         <strong>Error!</strong> Registration successful.

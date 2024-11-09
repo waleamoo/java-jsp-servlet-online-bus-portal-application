@@ -17,8 +17,6 @@ import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
 
-import jakarta.el.StaticFieldELResolver;
-
 public class ApplicationDAO {
 
     private String jdbcURL = "jdbc:mysql://localhost:3306/online_bus_system?useSSL=false";
@@ -46,14 +44,16 @@ public class ApplicationDAO {
     		INNER JOIN students ON waiting_list.student_id = students.student_id 
     		INNER JOIN parents ON students.parent_id = parents.parent_id;
     		""";
-    private static final String GET_BUS_AVAILABILITY = """ 
-    		SET @curentCapacity = (SELECT COUNT(*) AS 'count' FROM student_buses 
+    private static final String GET_BUS_CURRENT_CAPACITY = """ 
+    		SELECT COUNT(*) AS 'count' FROM student_buses 
 			    INNER JOIN buses ON student_buses.bus_id = buses.bus_id
 			    WHERE is_active = 1 AND buses.bus_id = ?
-			    GROUP BY student_buses.bus_id);
-			SET @fullCapacity = (SELECT bus_capacity FROM buses WHERE bus_id = ?);
-			SELECT IF(@currentCapacity < @fullCapacity, "TRUE", "FALSE") AS if_return_value; 
+			    GROUP BY student_buses.bus_id;
     		""";
+    private static final String GET_BUS_CAPACITY = """ 
+    		SELECT bus_capacity FROM buses WHERE bus_id = ?
+    		""";
+    
     private static final String UPDATE_STUDENT_PAYMENT = "UPDATE `student_buses` SET `is_active` = ?, `payment_date` = ?, `payment_expiry_date` = ? WHERE `student_id` = ?;";
     private static final String DELETE_STUDENT_IN_WAITING_LIST = "DELETE FROM waiting_list WHERE student_id = ?;";
     
@@ -248,18 +248,33 @@ public class ApplicationDAO {
     
     public boolean checkBusAvailability(int busId) {
     	boolean isAvailable = false;
+    	int busCurrentCapacity = 0, busCapacity = 0;
     	try (Connection connection = getConnection(); 
-            PreparedStatement preparedStatement = connection.prepareStatement(GET_BUS_AVAILABILITY);){
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_BUS_CURRENT_CAPACITY);){
             preparedStatement.setInt(1, busId);
             ResultSet rs =  preparedStatement.executeQuery();
-            while(rs.next()){
-            	if(rs.getString("if_return_value") == "TRUE")
-            		isAvailable = true;
-            	else 
-            		isAvailable = false;
+            if(rs.next()){
+            	busCurrentCapacity = rs.getInt(1);
             }
+            
+            try (PreparedStatement pstCapacity = connection.prepareStatement(GET_BUS_CAPACITY);) {
+            	pstCapacity.setInt(1, busId);
+            	ResultSet capacityRs = pstCapacity.executeQuery();
+            	if (capacityRs.next()) {
+					busCapacity = capacityRs.getInt(1);
+				}
+			} catch (Exception e) {
+				System.out.println("Check bus capacity error: " + e.getMessage());
+			}
+            // check if the current capacity is greater than or equal to the bus capacity 
+            if (busCurrentCapacity == busCapacity) {
+				isAvailable =  false;
+			}else {
+				isAvailable = true;
+			}
+            
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Check bus availability error: " + e.getMessage());
         }
     	return isAvailable;
     }

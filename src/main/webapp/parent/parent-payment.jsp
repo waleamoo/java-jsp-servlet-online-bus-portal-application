@@ -14,22 +14,22 @@
 					<h2>Make a payment</h2>
 					<p>Select a transporting plan.</p>
 
-					<form action="/save-order-and-pay" method="POST">
-
+					<form id="payment-form" method="POST">
+						
 						<h2>Choose Bus Transportation Ticket Plan</h2>
 
 						<hr>
 
 						<div class="form-check form-check-inline">
 							<label class="form-check-label"> <input
-								class="form-check-input" type="radio" name="journey" id=""
-								value="1m" required> R420 (1 month)
+								class="form-check-input" type="radio" name="journey" id="1m"
+								value="420.00" required> R420 (1 month)
 							</label> &nbsp; <label class="form-check-label"> <input
-								class="form-check-input" type="radio" name="journey" id=""
-								value="2m" required> R840 (2 month)
+								class="form-check-input" type="radio" name="journey" id="2m"
+								value="840.00" required> R840 (2 month)
 							</label> &nbsp; <label class="form-check-label"> <input
-								class="form-check-input" type="radio" name="journey" id=""
-								value="3m" required> R1,260 (3 month)
+								class="form-check-input" type="radio" name="journey" id="3m"
+								value="1260.00" required> R1,260 (3 month)
 							</label> &nbsp;
 						</div>
 
@@ -62,17 +62,16 @@
 								required>
 						</div> -->
 						
-						<input type="hidden" name="user_email" value="<%= session.getAttribute("parent_email") %>"> 
-						  <input type="hidden" name="amount" value=""> 
-						  <input type="hidden" name="cartid" value="<%= request.getAttribute("studentId") %>"> 
-						  <input type="hidden" name="callback_url" value="<% out.print(application.getInitParameter("WebAppContextPath") + "thank-you?studentId=" + session.getAttribute("studentId") + "&busId=" + session.getAttribute("busId")); %>">
-
-						<button type="submit" name="pay_now" id="pay-now" title="Pay now" class="btn btn-secondary btn-lg mb-4">Make
-							Payment</button>
-
+						<input type="hidden" name="user_email" id="user_email" value="<%= session.getAttribute("parent_email") %>"> 
+						  <input type="hidden" name="amount" id="amount" value=""> 
+						  <input type="hidden" name="cartid" id="cartid" value="<%= session.getAttribute("studentId") %>"> 
+						  <input type="hidden" name="callback_url" id="callback_url" value="<%= application.getInitParameter("WebAppContextPath") + "thank-you" %>">
+						
+						<img src="resources/img/paystack-btn.png" alt="no-image" />
+						
+						<button type="submit" style="background-image:url(img/paystack-btn.png);" name="pay_now" id="pay-now" title="Pay now" class="mb-4">Pay Now</button>
+						
 					</form>
-
-
 
 				</div>
 

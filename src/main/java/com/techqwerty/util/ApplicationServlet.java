@@ -6,9 +6,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
-
-import javax.swing.text.html.parser.DTD;
-
 import com.techqwerty.dao.ApplicationDAO;
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
@@ -103,39 +100,43 @@ public class ApplicationServlet extends HttpServlet {
 	        	// get the parameter 
 	        	int studentId = Integer.parseInt(request.getParameter("studentId"));
 	        	int busId = Integer.parseInt(request.getParameter("busId"));
+	        	// set the request variable to the session 
+	        	session.setAttribute("studentId", studentId);
+	        	session.setAttribute("busId", busId);
 	        	// validate if the parent can make a payment for the selected bus - check if there is availability 
 	        	if(!applicationDAO.checkBusAvailability(busId)) {
+	        		// get the list to display on the page 
+	        		List<StudentBusRequestDto> studentList = applicationDAO.getAllStudents((int) session.getAttribute("parent_id"));
+	                request.setAttribute("listStudent", studentList);
 	        		request.setAttribute("status", "invalidBusRegistration");
 	        		request.getRequestDispatcher("parent/parent-profile.jsp").forward(request, response);
 	        	}else {
-	        		session.setAttribute("studentId", studentId);
-		        	session.setAttribute("busId", busId);
 		        	request.getRequestDispatcher("parent/parent-payment.jsp").forward(request, response);
 	        	}
 	        	break;
 	        case "/set-user-journey":
-	        	String parent_selected_journey = request.getParameter("parent_selected_journey");
+	        	String parent_selected_journey = request.getParameter("selected_journey");
 	        	session.setAttribute("parent_selected_journey", parent_selected_journey);
 	        	break;
 	        case "/thank-you":
 	        	// get the parameter 
-	        	int stId = Integer.parseInt(request.getParameter("studentId"));
-	        	int bsId = Integer.parseInt(request.getParameter("busId"));
+	        	int stId = Integer.parseInt(session.getAttribute("studentId").toString());
+	        	int bsId = Integer.parseInt(session.getAttribute("busId").toString());
 	        	// update the student details 
-	        	String str_journey = session.getAttribute("parent_selected_journey").toString();
+	        	int str_journey = Integer.parseInt(session.getAttribute("parent_selected_journey").toString());
 	        	String payment_expiry_date = null;
 	        	var df = new SimpleDateFormat("yyyy-MM-dd");
 	        	Date date = new Date();
 	        	switch (str_journey) {
-					case "1m": 
+					case 420: 
 						LocalDateTime.from(date.toInstant()).plusMonths(1);
 						payment_expiry_date = df.format(date);
 						break;
-					case "2m":
+					case 840:
 						LocalDateTime.from(date.toInstant()).plusMonths(2);
 						payment_expiry_date = df.format(date);
 						break;
-					case "3m":
+					case 1260:
 						LocalDateTime.from(date.toInstant()).plusMonths(3);
 						payment_expiry_date = df.format(date);
 						break;

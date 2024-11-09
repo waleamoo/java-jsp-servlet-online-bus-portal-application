@@ -17,6 +17,17 @@
 	    <url-pattern>/resources/*</url-pattern>
 	</servlet-mapping>
 	
+	<!-- File settings - for images -->
+	<servlet-mapping>
+	    <servlet-name>Home</servlet-name>
+	    <servlet-class>com.techqwerty.util.HomeServlet</servlet-class>
+	</servlet-mapping>
+	<servlet-mapping>
+	    <servlet-name>Home</servlet-name>
+	    <url-pattern>/images</url-pattern>
+	</servlet-mapping>
+	
+	
 	<!-- SMTP settings -->
     <context-param>
         <param-name>host</param-name>

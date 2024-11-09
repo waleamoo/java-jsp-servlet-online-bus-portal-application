@@ -11,6 +11,7 @@
                     
                     <h2>Thank you for making a payment <%= session.getAttribute("parent_name") %></h2>
                     <p>Your payment has been successfully received and your transport access activated.</p>
+                    <a href="parent-dashboard"><h1>Back to Parent Dashboard</h1></a>
                     
                 </div>
 

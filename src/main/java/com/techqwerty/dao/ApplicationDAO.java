@@ -10,9 +10,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import com.techqwerty.dto.BusCapacityRequestDto;
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
 import com.techqwerty.dto.StudentBusRequestDto;
+import com.techqwerty.dto.StudentInsertDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
@@ -56,6 +59,19 @@ public class ApplicationDAO {
     
     private static final String UPDATE_STUDENT_PAYMENT = "UPDATE `student_buses` SET `is_active` = ?, `payment_date` = ?, `payment_expiry_date` = ? WHERE `student_id` = ?;";
     private static final String DELETE_STUDENT_IN_WAITING_LIST = "DELETE FROM waiting_list WHERE student_id = ?;";
+    
+    /*********************************************** REPORT QUERIES  *************************************************************************/
+    private static final String REPORT_BUS_CAPACITY = """ 
+    		SELECT DISTINCT buses.bus_label, COUNT(student_buses.bus_id) AS 'bus_count' FROM student_buses 
+			INNER JOIN buses ON student_buses.bus_id = buses.bus_id
+			GROUP BY student_buses.bus_id;
+    		""";
+    private static final String REPORT_BUS_CAPACITY_ACTIVE_REGISTRATIONS = """ 
+    		SELECT DISTINCT buses.bus_label, COUNT(student_buses.bus_id) AS 'bus_count' FROM student_buses 
+			INNER JOIN buses ON student_buses.bus_id = buses.bus_id
+			WHERE student_buses.is_active = 1
+			GROUP BY student_buses.bus_id;
+    		""";
     
 
     public ApplicationDAO(){
@@ -154,6 +170,54 @@ public class ApplicationDAO {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+        return 0;
+    }
+    
+    public int registerStudent(StudentInsertDto dto) throws SQLException{
+    	// insertion variables 
+    	int int_inserted_student_id = 0;
+        // add a student under the new parent 
+        try (Connection connection = getConnection(); PreparedStatement pstStudent = connection.prepareStatement(REGISTER_STUDENT, Statement.RETURN_GENERATED_KEYS);){
+			pstStudent.setString(1, dto.studentName);
+			pstStudent.setString(2, dto.studentContactNumber);
+			pstStudent.setString(3, dto.studentAddress);
+			pstStudent.setString(4, dto.studentGrade);
+			pstStudent.setInt(5, dto.parentId);						
+			int studentRow = pstStudent.executeUpdate();
+			if (studentRow > 0) {
+				ResultSet studentResultSet = pstStudent.getGeneratedKeys();
+				if (studentResultSet.next()) {
+					int_inserted_student_id = studentResultSet.getInt(1);
+				}
+				
+				// save student in the waiting list 
+		        try (PreparedStatement waitListPst = connection.prepareStatement(REGISTER_STUDENT_IN_WAITING_LIST);){
+		        	var df = new SimpleDateFormat("yyyy-MM-dd");
+		        	waitListPst.setInt(1, int_inserted_student_id);
+		        	waitListPst.setInt(2, dto.busId);
+		        	waitListPst.setString(3, df.format(new Date()).toString());						
+		        	waitListPst.executeUpdate();
+				} catch (Exception e) {
+					System.out.println("Student cannot be added to waiting list: " + e.getMessage());
+				}
+		        // add a student to a bus - as inactive 
+		        try (PreparedStatement pstBus = connection.prepareStatement(REGISTER_STUDENT_IN_BUS);){
+					pstBus.setInt(1, int_inserted_student_id);
+					pstBus.setInt(2, dto.parentId);				
+					pstBus.setInt(3, dto.busId);
+					pstBus.setString(4, null);			
+					pstBus.setString(5, null);			
+					pstBus.setInt(6, 0);			
+					pstBus.executeUpdate();
+				} catch (Exception e) {
+					System.out.println("Student cannot be added to bus: " + e.getMessage());
+				}
+			}
+			return studentRow;
+		} catch (Exception e) {
+			System.out.println("Student cannot be added: " + e.getMessage());
+		}
+        
         return 0;
     }
     
@@ -330,5 +394,24 @@ public class ApplicationDAO {
             }
             return busRoutes; 
     }
-
+    
+    /************************************** REPORT SECTION ***********************************************************/
+    public List<BusCapacityRequestDto> getBusCapacity(){
+        List<BusCapacityRequestDto> bsCapacity = new ArrayList<BusCapacityRequestDto>();
+        try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(REPORT_BUS_CAPACITY);){
+            ResultSet rs =  preparedStatement.executeQuery();
+            while(rs.next()){
+            	bsCapacity.add(
+                    new BusCapacityRequestDto(
+                        rs.getString("bus_label"),
+                        rs.getString("bus_count")
+                    )
+                );
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return bsCapacity; 
+    }
+    
 }

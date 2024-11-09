@@ -64,7 +64,7 @@
                         <div class="form-group">
                           <label for="student_grd">Student Grade</label>
                           <select class="form-control" name="student_grd" id="student_grd">
-                              <option value="<% if(request.getParameter("student_grd") != null) out.print(request.getParameter("student_grd")); %>"><% if(request.getParameter("student_grd") != null) out.print(request.getParameter("student_grd")); else out.print("Select a grade"); %></option>
+                              <option value="<% if(request.getParameter("student_grd") != null) out.print(request.getParameter("student_grd")); else out.print("0"); %>"><% if(request.getParameter("student_grd") != null) out.print(request.getParameter("student_grd")); else out.print("Select a grade"); %></option>
                               <option value="10">10</option>
                               <option value="11">11</option>
                               <option value="12">12</option>
@@ -76,7 +76,7 @@
                         	<label for="bus_id">Bus</label>
                         	<select class="custom-select" name="bus_id" id="bus_id">
                         		<% List<BusRouteDto> busRoutes = (List<BusRouteDto>) request.getAttribute("busRouteDtos"); %>
-                        		<option value="<% if(request.getParameter("bus_id") != null) out.print(request.getParameter("bus_id")); %>"><% if(request.getParameter("bus_id") != null) out.print("Bus selected"); else out.print("Select a bus"); %></option>
+                        		<option value="<% if(request.getParameter("bus_id") != null) out.print(request.getParameter("bus_id")); else out.print("0"); %>"><% if(request.getParameter("bus_id") != null) out.print("Bus selected"); else out.print("Select a bus"); %></option>
                         		<% for(BusRouteDto bus : busRoutes){ %>
                         			<option value="<%= bus.busId %>"><%= bus.busLabel %> - <%= bus.routeName %></option>
                         		<% } %>

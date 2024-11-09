@@ -3,13 +3,14 @@ package com.techqwerty.util;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import com.techqwerty.dao.ApplicationDAO;
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
 import com.techqwerty.dto.StudentBusRequestDto;
+import com.techqwerty.dto.StudentInsertDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
@@ -70,6 +71,13 @@ public class ApplicationServlet extends HttpServlet {
 					e.printStackTrace();
 				}
                 break;
+            case "parent-add-child":
+            	try {
+            		registerStudent(req, resp);
+            	} catch (ServletException | IOException | SQLException e) {
+            		e.printStackTrace();
+            	}
+            	break;
             
             default:
             	req.getRequestDispatcher("index.jsp").forward(req, resp); 
@@ -94,6 +102,9 @@ public class ApplicationServlet extends HttpServlet {
 	            request.getRequestDispatcher("parent/parent-profile.jsp").forward(request, response);
 	        	break;
 	        case "/parent-add-child":
+	        	// get the bus route for display on the page - in case there are errors 
+	        	List<BusRouteDto> busRouteDtos = applicationDAO.getBusRoute();
+	        	request.setAttribute("busRouteDtos", busRouteDtos);
 	        	request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
 	        	break;
 	        case "/parent-payment":
@@ -123,22 +134,29 @@ public class ApplicationServlet extends HttpServlet {
 	        	int stId = Integer.parseInt(session.getAttribute("studentId").toString());
 	        	int bsId = Integer.parseInt(session.getAttribute("busId").toString());
 	        	// update the student details 
-	        	int str_journey = Integer.parseInt(session.getAttribute("parent_selected_journey").toString());
+	        	String str_journey = session.getAttribute("parent_selected_journey").toString();
 	        	String payment_expiry_date = null;
 	        	var df = new SimpleDateFormat("yyyy-MM-dd");
 	        	Date date = new Date();
+	        	Calendar calendar = Calendar.getInstance();
 	        	switch (str_journey) {
-					case 420: 
-						LocalDateTime.from(date.toInstant()).plusMonths(1);
-						payment_expiry_date = df.format(date);
+					case "420.00": 
+						calendar.setTime(date);
+				    	calendar.add(Calendar.DATE, 30);
+				    	date = calendar.getTime();
+				    	payment_expiry_date = df.format(date);
 						break;
-					case 840:
-						LocalDateTime.from(date.toInstant()).plusMonths(2);
-						payment_expiry_date = df.format(date);
+					case "840.00":
+						calendar.setTime(date);
+				    	calendar.add(Calendar.DATE, 60);
+				    	date = calendar.getTime();
+				    	payment_expiry_date = df.format(date);
 						break;
-					case 1260:
-						LocalDateTime.from(date.toInstant()).plusMonths(3);
-						payment_expiry_date = df.format(date);
+					case "1260.00":
+						calendar.setTime(date);
+				    	calendar.add(Calendar.DATE, 90);
+				    	date = calendar.getTime();
+				    	payment_expiry_date = df.format(date);
 						break;
 				
 					default:
@@ -157,20 +175,18 @@ public class ApplicationServlet extends HttpServlet {
 				}
 	        	request.getRequestDispatcher("parent/thank-you.jsp").forward(request, response);
 	        	break;
-	            
 	        case "/home":
 	        	request.getRequestDispatcher("index.jsp").forward(request, response);
 	        	break;
 	        case "/register-parent":
 	        	// get the bus routes 
-	        	List<BusRouteDto> busRouteDtos = applicationDAO.getBusRoute();
-	        	request.setAttribute("busRouteDtos", busRouteDtos);
+	        	List<BusRouteDto> busRouteDtos1 = applicationDAO.getBusRoute();
+	        	request.setAttribute("busRouteDtos", busRouteDtos1);
 	        	request.getRequestDispatcher("parent/parent-register.jsp").forward(request, response); 
 	        	break;
             case "/staff":
             	request.getRequestDispatcher("staff-login.jsp").forward(request, response);
             	break;
-                
             case "/logout":
             	session = request.getSession();
                 session.invalidate();
@@ -368,7 +384,7 @@ public class ApplicationServlet extends HttpServlet {
 	    	applicationDAO.registerParent(dto);
 	    	// email the client 
 	    	try {
-	            EmailUtility.sendEmail(host, port, user, pass, "recipient", "subject", "content");
+	            EmailUtility.sendEmail(host, port, user, pass, parentEmail, "Parent Student Registration Success", "Hi " + parentName + " " + parentInitials + ", \nYour regisration is successful. Please login and make a payment.");
 	        } catch (Exception ex) {
 	            ex.printStackTrace();
 	        } finally {
@@ -380,6 +396,60 @@ public class ApplicationServlet extends HttpServlet {
 		}
     	
 	}
+    
+    private void registerStudent(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+    	// get the bus route for display on the page - in case there are errors 
+    	List<BusRouteDto> busRouteDtos = applicationDAO.getBusRoute();
+    	request.setAttribute("busRouteDtos", busRouteDtos);
+    	
+    	// get the values from the form 
+    	String studentName = request.getParameter("student_name");
+    	String studentNum = request.getParameter("student_num");
+    	String studentAddr = request.getParameter("student_addr");
+    	String studentGrade = request.getParameter("student_grd");
+    	int busId = Integer.parseInt(request.getParameter("bus_id"));
+    	
+    	// validate the entries 
+    	if(studentName == null || studentName.trim().equals("") || !studentName.matches("[A-Za-z ]{5,40}")) {
+			request.setAttribute("status", "invalidStudentName");
+			request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
+		}else if(studentNum == null || studentNum.trim().equals("") || !studentNum.matches("([0-9]{10})")) {
+			request.setAttribute("status", "invalidStudentNumber");
+			request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
+		}else if(studentAddr == null || studentAddr.trim().equals("") || !studentAddr.matches("[A-Za-z0-9 ]{5,40}")) {
+			request.setAttribute("status", "invalidStudentAddress");
+			request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
+		}else if(studentGrade == null || studentGrade.trim().equals("") || !studentGrade.matches("[0-9]{2}")) {
+			request.setAttribute("status", "invalidStudentGrade");
+			request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
+		}else if(busId <= 0) {
+			request.setAttribute("status", "invalidBusId");
+			request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
+		}else {
+			// accesss the session
+	    	HttpSession session = request.getSession();
+			
+	    	// register the parent and student 
+			int parentId = Integer.parseInt(session.getAttribute("parent_id").toString());
+			String parentEmail = session.getAttribute("parent_email").toString();
+			StudentInsertDto dto = new StudentInsertDto(studentName, studentNum, studentAddr, studentGrade, parentId, busId);
+	    	applicationDAO.registerStudent(dto);
+	    	// email the client 
+	    	try {
+	            EmailUtility.sendEmail(host, port, user, pass, parentEmail, "Student Registration Successful", "Hi, \nYour student registration is successful. Currently your student is in the waiting list. Make a payment to active their subscription.");
+	        } catch (Exception ex) {
+	            ex.printStackTrace();
+	        } finally {
+	        	request.setAttribute("registerMessage", "Student  registration successful.");
+	            //getServletContext().getRequestDispatcher("/Result.jsp").forward(request, response);
+	            request.getRequestDispatcher("parent/parent-add-child.jsp").forward(request, response);
+	        }
+	    	
+		}
+    	
+	}
+    
+    
     
 }
 

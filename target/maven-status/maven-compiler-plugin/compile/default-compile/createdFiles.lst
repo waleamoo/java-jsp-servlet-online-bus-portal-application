@@ -15,4 +15,5 @@ com\techqwerty\dto\StudentBusRequestDto.class
 com\techqwerty\dto\ParentStudentInsertDto.class
 com\techqwerty\dto\WaitingListRequestDto.class
 com\techqwerty\model\StudentBus.class
+com\techqwerty\dto\StudentInsertDto.class
 com\techqwerty\util\ApplicationServlet.class

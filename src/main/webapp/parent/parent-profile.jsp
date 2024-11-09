@@ -1,7 +1,7 @@
 <%@ include file="/static/header.jsp" %>
 <%@ page import="java.util.*, com.techqwerty.dto.*, java.text.SimpleDateFormat, java.time.LocalDate" %>
 <div class="container my-4">
-    <div class="row">
+    <div class="row" style="padding-bottom: 100px;">
 
         <%@ include file="/static/parent-sidebar.jsp" %>
 
@@ -42,7 +42,7 @@
 	                            		Date expiryDate = tempStudent.paymentExpiryDate == null ? new Date() : sdf.parse(tempStudent.paymentExpiryDate);
 	                            		Date today = new Date();
 	                            		%>
-	                            		<% if(tempStudent.paymentExpiryDate == null || expiryDate.after(today)){ %>
+	                            		<% if(tempStudent.paymentExpiryDate == null || expiryDate.before(today)){ %>
 	                            		<td><a href="parent-payment?studentId=<%= tempStudent.studentId %>&busId=<%= tempStudent.busId %>"><button>Make Payment</button></a></td>
 	                            		<% }else{ %>
 	                            		<td><span class="text-success">Active</span></td>

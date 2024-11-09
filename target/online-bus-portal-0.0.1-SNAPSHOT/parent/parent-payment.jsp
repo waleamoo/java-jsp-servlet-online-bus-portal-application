@@ -67,9 +67,7 @@
 						  <input type="hidden" name="cartid" id="cartid" value="<%= session.getAttribute("studentId") %>"> 
 						  <input type="hidden" name="callback_url" id="callback_url" value="<%= application.getInitParameter("WebAppContextPath") + "thank-you" %>">
 						
-						<img src="${pageContext.request.contextPath}/img/paystack-btn.png" alt="no-image" />
-						
-						<button type="submit" style="background-image:url(img/paystack-btn.png);" name="pay_now" id="pay-now" title="Pay now" class="mb-4">Pay Now</button>
+						<input type="image" src="${pageContext.request.contextPath}/resources/images/paystack-btn.png" name="pay_now" id="pay-now" title="Pay now" class="mb-4" />
 						
 					</form>
 

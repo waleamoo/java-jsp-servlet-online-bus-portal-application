@@ -29,7 +29,7 @@ $(document).ready(function(){
 		let email = document.getElementById("user_email").value;
 		
 		let handler = PaystackPop.setup({
-			key: 'pk_live_cd697a00ec83059380cfd512cff74a9f1c913045',
+			key: 'pk_test_e9a8ce8b46c57ae85605d88131e4af45a71d59c2',
 			email: email,
 			amount: amount * 100,
 			currency: 'NGN',

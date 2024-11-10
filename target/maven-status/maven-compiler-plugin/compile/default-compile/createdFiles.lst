@@ -1,4 +1,5 @@
 com\techqwerty\model\Admin.class
+com\techqwerty\dto\BusCapacityRequestDto.class
 com\techqwerty\model\Payment.class
 com\techqwerty\util\HomeServlet.class
 com\techqwerty\util\MyEncryptor.class

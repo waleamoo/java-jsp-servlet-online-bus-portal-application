@@ -12,7 +12,7 @@
                             <a href="<%= request.getContextPath() %>/staff-dashboard" class="nav-list">Staff Dashboard</a>
                         </li>
                     </ul>
-                    <h2>Welcome to your profile area <%= session.getAttribute("admin_name") %> </h2>
+                    <h2>Welcome <%= session.getAttribute("admin_name") %>. The students listed below are in the waiting list. </h2>
                     
                     <% var waitingList = (List<WaitingListRequestDto>) request.getAttribute("waitingList"); %>
                     

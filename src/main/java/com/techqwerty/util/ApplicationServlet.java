@@ -3,10 +3,13 @@ package com.techqwerty.util;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import com.google.gson.Gson;
 import com.techqwerty.dao.ApplicationDAO;
+import com.techqwerty.dto.BusCapacityRequestDto;
 import com.techqwerty.dto.BusRouteDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
 import com.techqwerty.dto.StudentBusRequestDto;
@@ -202,6 +205,36 @@ public class ApplicationServlet extends HttpServlet {
             			List<WaitingListRequestDto> waitingList = applicationDAO.getWatingList();
             			request.setAttribute("waitingList", waitingList);
             			request.getRequestDispatcher("admin/staff-profile.jsp").forward(request, response);
+            		}
+            	}else {
+            		response.sendRedirect(context.getInitParameter("WebAppContextPath"));
+            	}
+            	break;
+            case "/staff-reports":
+            	// check if the user is logged in as a staff
+            	if(session != null) {
+            		if(session.getAttribute("admin_name") == null){ 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath")); 
+            		}else {
+            			// show the staff reports section
+            			List<BusCapacityRequestDto> busCapacityReport = applicationDAO.getBusCapacity();
+            			
+            			ArrayList<String> strBusLabels = new ArrayList<>();
+            			ArrayList<Integer> intBusCounts = new ArrayList<Integer>();
+            			
+            			
+            			for(BusCapacityRequestDto bc : busCapacityReport) {
+            				strBusLabels.add(bc.bus_label);
+            				intBusCounts.add(Integer.parseInt(bc.bus_count));
+            			}
+            			
+            			//Gson gson = new Gson();
+            			//gson.toJson(strBusLabels);
+            			
+            			request.setAttribute("labels", strBusLabels);
+            			request.setAttribute("counts", intBusCounts);
+            			
+            			request.getRequestDispatcher("admin/staff-report.jsp").forward(request, response);
             		}
             	}else {
             		response.sendRedirect(context.getInitParameter("WebAppContextPath"));

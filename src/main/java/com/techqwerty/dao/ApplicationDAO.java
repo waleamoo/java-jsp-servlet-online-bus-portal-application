@@ -9,13 +9,16 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import com.techqwerty.dto.BusCapacityRequestDto;
 import com.techqwerty.dto.BusRouteDto;
+import com.techqwerty.dto.BusWaitingListRequestDto;
 import com.techqwerty.dto.ParentStudentInsertDto;
 import com.techqwerty.dto.StudentBusRequestDto;
 import com.techqwerty.dto.StudentInsertDto;
+import com.techqwerty.dto.StudentRegistrationDto;
 import com.techqwerty.dto.WaitingListRequestDto;
 import com.techqwerty.model.Admin;
 import com.techqwerty.model.Parent;
@@ -73,6 +76,30 @@ public class ApplicationDAO {
 			GROUP BY student_buses.bus_id;
     		""";
     
+    private static final String REPORT_BUS_CAPACITY_CURRENT_WEEK = """ 
+    		SELECT buses.bus_label, COUNT(*) AS 'bus_count'
+		    FROM student_buses 
+		    INNER JOIN buses ON student_buses.bus_id = buses.bus_id
+		    WHERE is_active = 1 AND student_buses.payment_expiry_date > WEEK(CURRENT_DATE)
+		    GROUP BY student_buses.bus_id;
+    		""";
+    private static final String REPORT_WAITINGLIST_NUMBER_CURRENT_MONTH = """ 
+    		SELECT count(*) as 'month_list' FROM `waiting_list` WHERE MONTH(joined_date) = MONTH(CURRENT_DATE);
+    		""";
+    private static final String REPORT_WAITINGLIST = """ 
+    		SELECT students.student_name, students.student_address, parents.parent_name, parents.parent_email, parents.parent_contact_number
+		    FROM waiting_list 
+		    INNER JOIN students ON waiting_list.student_id = students.student_id
+		    INNER JOIN parents ON students.parent_id = parents.parent_id
+		    WHERE waiting_list.joined_date = CURRENT_DATE
+		    ORDER BY students.student_name;
+    		""";
+    /* update waiting list */
+    private static final String GET_EXPIRED_REGISTRATIONS = """
+    		SELECT * FROM student_buses WHERE 
+			payment_expiry_date < CURRENT_DATE OR payment_date IS NULL OR payment_expiry_date IS NULL;
+    		""";
+    private static final String UPDATE_EXPIRED_REGISTRATIONS = "UPDATE student_buses SET payment_date = NULL, payment_expiry_date = NULL, is_active = '0' WHERE student_id = ? ";
 
     public ApplicationDAO(){
     	
@@ -413,5 +440,123 @@ public class ApplicationDAO {
         }
         return bsCapacity; 
     }
+    
+    public List<BusCapacityRequestDto> getBusCapacityForActiveRegstrations(){
+        List<BusCapacityRequestDto> bsCapacity = new ArrayList<BusCapacityRequestDto>();
+        try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(REPORT_BUS_CAPACITY_ACTIVE_REGISTRATIONS);){
+            ResultSet rs =  preparedStatement.executeQuery();
+            while(rs.next()){
+            	bsCapacity.add(
+                    new BusCapacityRequestDto(
+                        rs.getString("bus_label"),
+                        rs.getString("bus_count")
+                    )
+                );
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return bsCapacity; 
+    }
+    
+    public List<BusCapacityRequestDto> getBusCapacityForCurrentWeek(){
+    	List<BusCapacityRequestDto> bsCapacity = new ArrayList<BusCapacityRequestDto>();
+    	try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(REPORT_BUS_CAPACITY_CURRENT_WEEK);){
+    		ResultSet rs =  preparedStatement.executeQuery();
+    		while(rs.next()){
+    			bsCapacity.add(
+					new BusCapacityRequestDto(
+							rs.getString("bus_label"),
+							rs.getString("bus_count")
+						)
+					);
+    		}
+    	} catch (Exception e) {
+    		System.out.println(e.getMessage());
+    	}
+    	return bsCapacity; 
+    }
+    
+    public String getWaitingListCurrentMonth(){
+    	String strWaitingListString = null;
+    	try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(REPORT_WAITINGLIST_NUMBER_CURRENT_MONTH);){
+    		ResultSet rs =  preparedStatement.executeQuery();
+    		while(rs.next()){
+    			strWaitingListString = rs.getString("month_list");
+    			if(Integer.parseInt(strWaitingListString) < 1) {
+    				strWaitingListString = "0";
+    			}
+    		}
+    	} catch (Exception e) {
+    		System.out.println(e.getMessage());
+    	}
+    	return strWaitingListString; 
+    }
+    
+    public List<BusWaitingListRequestDto> getWaitingList(){
+    	List<BusWaitingListRequestDto> busWaitingList = new ArrayList<BusWaitingListRequestDto>();
+    	try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(REPORT_WAITINGLIST);){
+    		ResultSet rs =  preparedStatement.executeQuery();
+    		while(rs.next()){
+    			busWaitingList.add(
+					new BusWaitingListRequestDto(
+							rs.getString("student_name"),
+							rs.getString("student_address"),
+							rs.getString("parent_name"),
+							rs.getString("parent_email"),
+							rs.getString("parent_contact_number")
+						)
+					);
+    		}
+    	} catch (Exception e) {
+    		System.out.println(e.getMessage());
+    	}
+    	return busWaitingList; 
+    }
+    
+    public void updateWaitingList() {
+    	var df = new SimpleDateFormat("yyyy-MM-dd");
+    	List<StudentRegistrationDto> expiredRegistrationList = new ArrayList<StudentRegistrationDto>();
+    	try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(GET_EXPIRED_REGISTRATIONS);){
+    		ResultSet rs =  preparedStatement.executeQuery();
+    		while(rs.next()){
+    			expiredRegistrationList.add(
+					new StudentRegistrationDto(
+							rs.getInt("id"),
+							rs.getInt("student_id"),
+							rs.getInt("parent_id"),
+							rs.getInt("bus_id"),
+							rs.getString("payment_date"),
+							rs.getString("payment_expiry_date"),
+							rs.getInt("is_active")
+						)
+					);
+    		}
+    		
+    		for(StudentRegistrationDto studentRegistrationDto : expiredRegistrationList) {
+    			try (PreparedStatement updatePst = connection.prepareStatement(UPDATE_EXPIRED_REGISTRATIONS);){
+    				updatePst.setInt(1, studentRegistrationDto.studentId);
+    	            int rowCount =  updatePst.executeUpdate();
+    	    		if (rowCount > 0) {
+						try (PreparedStatement insertPst = connection.prepareStatement(REGISTER_STUDENT_IN_WAITING_LIST);){
+							insertPst.setInt(1, studentRegistrationDto.studentId);
+							insertPst.setInt(2, studentRegistrationDto.busId);
+							insertPst.setString(3, df.format(new Date()).toString());
+							insertPst.executeUpdate();
+						} catch (Exception e) {
+							System.out.println("Insert waiting list error: " + e.getMessage());
+						}
+					}
+    				
+    	    	} catch (Exception e) {
+    	    		System.out.println("Update waiting list error: " + e.getMessage());
+    	    	}
+    		}
+    		
+    	} catch (Exception e) {
+    		System.out.println(e.getMessage());
+    	}
+    }
+    
     
 }

@@ -201,6 +201,10 @@ public class ApplicationServlet extends HttpServlet {
             		if(session.getAttribute("admin_name") == null){ 
             			response.sendRedirect(context.getInitParameter("WebAppContextPath")); 
             		}else {
+            			// update the waiting list 
+            			// TODO: Waiting list to be updated by a CRON job 
+            			applicationDAO.updateWaitingList();
+            			
             			// show the staff dashboard
             			List<WaitingListRequestDto> waitingList = applicationDAO.getWatingList();
             			request.setAttribute("waitingList", waitingList);
@@ -218,9 +222,14 @@ public class ApplicationServlet extends HttpServlet {
             		}else {
             			// show the staff reports section
             			List<BusCapacityRequestDto> busCapacityReport = applicationDAO.getBusCapacity();
+            			List<BusCapacityRequestDto> busCapacityActiveReport = applicationDAO.getBusCapacityForActiveRegstrations(); 
+            			List<BusCapacityRequestDto> busCapacityWeeklyReport = applicationDAO.getBusCapacityForCurrentWeek(); 
             			
             			ArrayList<String> strBusLabels = new ArrayList<>();
             			ArrayList<Integer> intBusCounts = new ArrayList<Integer>();
+            			
+            			ArrayList<String> strActiveLabels = new ArrayList<>();
+            			ArrayList<Integer> intActiveCounts = new ArrayList<Integer>();
             			
             			
             			for(BusCapacityRequestDto bc : busCapacityReport) {
@@ -228,11 +237,22 @@ public class ApplicationServlet extends HttpServlet {
             				intBusCounts.add(Integer.parseInt(bc.bus_count));
             			}
             			
+            			for(BusCapacityRequestDto bc : busCapacityActiveReport) {
+            				strActiveLabels.add(bc.bus_label);
+            				intActiveCounts.add(Integer.parseInt(bc.bus_count));
+            			}
+            			
             			//Gson gson = new Gson();
             			//gson.toJson(strBusLabels);
             			
             			request.setAttribute("labels", strBusLabels);
             			request.setAttribute("counts", intBusCounts);
+            			
+            			request.setAttribute("activeLabels", strActiveLabels);
+            			request.setAttribute("activeCounts", intActiveCounts);
+            			
+            			request.setAttribute("busCapacityWeeklyReport", busCapacityWeeklyReport);
+            			request.setAttribute("busWaitingListCurentMonthReport", applicationDAO.getWaitingListCurrentMonth());
             			
             			request.getRequestDispatcher("admin/staff-report.jsp").forward(request, response);
             		}
@@ -261,6 +281,20 @@ public class ApplicationServlet extends HttpServlet {
             			
             			session.setAttribute("status", "waitingListEmailSent");
             			response.sendRedirect(context.getInitParameter("WebAppContextPath") + "staff-dashboard");
+            		}
+            	}else { 
+            		response.sendRedirect(context.getInitParameter("WebAppContextPath"));
+            	}
+            	break;
+            case "/staff-waiting-list":
+            	// check if the user is logged in as a staff
+            	if(session != null) {
+            		if(session.getAttribute("admin_name") == null){ 
+            			response.sendRedirect(context.getInitParameter("WebAppContextPath"));
+            		}else {
+            			
+            			request.setAttribute("busWaitingList", applicationDAO.getWaitingList());
+            			request.getRequestDispatcher("admin/staff-waiting-list.jsp").forward(request, response);
             		}
             	}else { 
             		response.sendRedirect(context.getInitParameter("WebAppContextPath"));

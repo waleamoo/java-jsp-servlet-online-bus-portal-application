@@ -47,6 +47,9 @@
           	<li class="nav-item active">
               <a class="nav-link" href="staff-reports">Reports</a>
             </li>
+          	<li class="nav-item active">
+              <a class="nav-link" href="staff-waiting-list">Waiting List</a>
+            </li>
             <li class="nav-item active">
               <a class="nav-link" href="logout">Logout</a>
             </li>

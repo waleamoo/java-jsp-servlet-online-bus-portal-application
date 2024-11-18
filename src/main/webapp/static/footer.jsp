@@ -32,6 +32,28 @@
         } 
     });
   </script>
+  
+  <script>
+    let activeStats = document.getElementById('student-bus-capacity-active').getContext('2d');
+    let activechart = new Chart(activeStats, {
+        type: 'pie', 
+        data: {
+            labels: <%= gson.toJson(request.getAttribute("activeLabels")) %>,
+            datasets: [{
+                label: 'Student Bus Capacity Report - Active Registrations Only',
+                data: <%= gson.toJson(request.getAttribute("activeCounts")) %>, 
+                backgroundColor: '#03fc90', 
+                borderWidth: 1,
+                borderColor: '#fdfdfd',
+                hoverBorderWidth: 3,
+                hoverBorderColor: '#000000'
+            }]
+
+        } 
+    });
+  </script>
+  
+  
 </body>
 
 </html>

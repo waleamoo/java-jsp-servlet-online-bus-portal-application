@@ -56,6 +56,7 @@
 						    <% } %>
                         </tbody>
                     </table>
+                    
                 </div>
 
             </div>

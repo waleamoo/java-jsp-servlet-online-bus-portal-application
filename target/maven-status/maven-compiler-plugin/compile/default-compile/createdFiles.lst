@@ -1,6 +1,8 @@
 com\techqwerty\model\Admin.class
+com\techqwerty\dto\StudentRegistrationDto.class
 com\techqwerty\dto\BusCapacityRequestDto.class
 com\techqwerty\model\Payment.class
+com\techqwerty\dto\BusWaitingListRequestDto.class
 com\techqwerty\util\HomeServlet.class
 com\techqwerty\util\MyEncryptor.class
 com\techqwerty\model\Bus.class

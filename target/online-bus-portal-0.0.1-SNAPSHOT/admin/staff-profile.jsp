@@ -16,6 +16,8 @@
                     
                     <% var waitingList = (List<WaitingListRequestDto>) request.getAttribute("waitingList"); %>
                     
+                    <b class="text-danger"><%= waitingList.size() %> total student(s) in the waiting list</b>
+                    
                     <%@ include file="/static/errors.jsp" %>
                     
                     <table class="table">
